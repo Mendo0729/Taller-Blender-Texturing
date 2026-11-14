@@ -321,6 +321,15 @@ def make_uv():
 def make_tank():
     bpy.ops.wm.open_mainfile(filepath=str((SOURCES/"Tank.blend").resolve()))
     remove_old_studio()
+    # El origen usa codificacion FFMPEG. Reubicar la geometria en una nueva
+    # escena evita restricciones del formato de salida heredado.
+    old_scene=bpy.context.scene
+    new_scene=bpy.data.scenes.new("Tanque - entrega PBR")
+    for existing in list(old_scene.objects):
+        if existing.type in {'MESH','CURVE'}:
+            new_scene.collection.objects.link(existing)
+    bpy.context.window.scene=new_scene
+    bpy.data.scenes.remove(old_scene)
     body=next(o for o in bpy.data.objects if o.type=='MESH')
     # Materiales PBR basados en todos los mapas suministrados.
     paint=pbr_material("Pintura militar desgastada PBR","Paint_Rusted_1K_albedo.tif",
