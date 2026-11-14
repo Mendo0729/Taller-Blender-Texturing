@@ -1,0 +1,23 @@
+name: Inspect texture PDF
+on:
+  push:
+    branches:
+      - trabajo-taller-texturing
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print PDF information and extracted instructions
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          pdfinfo textura.pdf | head -30
+          pdftotext -layout textura.pdf /tmp/taller.txt
+          echo "=== BEGIN PDF EXTRACT ==="
+          cat /tmp/taller.txt
+          echo "=== END PDF EXTRACT ==="
