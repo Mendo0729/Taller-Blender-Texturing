@@ -19,7 +19,7 @@ jobs:
           blender --version | head -3
       - name: Create the project and render evidence
         run: |
-          blender -b -t 6 --python scripts/build_taller.py
+          blender -b -t 6 --python-exit-code 1 --python scripts/build_taller.py
           ls -lh entrega/
       - name: Document the deliverables
         shell: bash
@@ -72,11 +72,17 @@ jobs:
               a=Image.open(img);a.verify()
               print("VERIFIED_RENDER", os.path.basename(img), os.path.getsize(img))
           for blend in sorted(glob.glob("entrega/*.blend")):
-              with open(blend,"rb") as f: assert f.read(7)==b"BLENDER"
+              assert os.path.getsize(blend)>10240  # .blend may use Blender internal compression
               print("VERIFIED_BLEND", os.path.basename(blend), os.path.getsize(blend))
           assert len(glob.glob("entrega/*.blend"))==4
           assert len(glob.glob("entrega/*.png"))==4
           PY
+      - name: Re-open every Blender project
+        shell: bash
+        run: |
+          for project in entrega/*.blend; do
+            blender -b "$project" --python-exit-code 1 --python-expr 'import bpy; assert len(bpy.data.objects)>0; print("REOPEN_OK", bpy.data.filepath, len(bpy.data.objects))'
+          done
       - name: Print reduced preview image
         run: |
           python3 - <<'PY'
