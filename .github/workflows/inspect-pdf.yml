@@ -1,0 +1,114 @@
+name: Build Blender texturing workshop
+on:
+  push:
+    branches:
+      - trabajo-taller-texturing
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-pil >/dev/null
+          blender --version | head -3
+      - name: Create the project and render evidence
+        run: |
+          blender -b -t 6 --python-exit-code 1 --python scripts/build_taller.py
+          ls -lh entrega/
+      - name: Remove automatic Blender backup copies
+        shell: bash
+        run: rm -f entrega/*.blend1
+      - name: Document the deliverables
+        shell: bash
+        run: |
+          cat > entrega/LEEME.md <<'EOF'
+          # Entrega - Taller de Blender Texturing
+
+          Se trabajaron los tres modulos del PDF \`textura.pdf\` mediante
+          escenas editables en Blender 5.0.1. Se conservaron intactos los
+          archivos originales dentro de \`Textures_files/\`.
+
+          ## Archivos finales
+
+          | Archivo Blender | Demostracion |
+          |---|---|
+          | \`01_materiales.blend\` | Comparacion de material dielectrico, metalico, fibra de carbono con clearcoat y cubo dividido con dos materiales. |
+          | \`02_camuflaje.blend\` | Textura procedural con Noise, ColorRamp (interpolacion constante), MixRGB y material con la imagen CamoTexture.png. |
+          | \`03_mapeo_uv.blend\` | Comparacion de coordenadas UV (ColorGridTexture y camuflaje) con coordenadas Object y proyeccion BOX. |
+          | \`04_tanque_pbr.blend\` | Modelo del tanque original texturizado con albedo, roughness, normal y metallic suministrados. |
+
+          Cada proyecto incluye una imagen PNG con el mismo nombre, generada
+          directamente mediante el motor Cycles. Las texturas externas estan
+          empaquetadas en cada archivo \`.blend\` para facilitar su apertura.
+
+          ## Correspondencia con el PDF
+
+          - Modulo 1: colores y multiples materiales; metalico, rugosidad y recubrimiento.
+          - Modulo 2: nodos Image Texture, Noise Texture, ColorRamp y mezcla de camuflaje.
+          - Modulo 3: editor UV, coordenadas de textura, nodo Mapping y proyeccion BOX.
+
+          ## Abrir
+
+          1. Abrir un proyecto \`.blend\` en Blender 5.0 o compatible.
+          2. Usar *Material Preview* o *Rendered* para visualizar los materiales.
+          3. Revisar el workspace Shading para inspeccionar y modificar los nodos.
+          4. Pulsar F12 para volver a renderizar la escena.
+
+          ## Notas tecnicas
+
+          Los ejemplos practicos son una implementacion de los conceptos del PDF,
+          no una transcripcion literal de cada captura del tutorial. Las escenas
+          iniciales y texturas proceden del repositorio.
+          EOF
+      - name: Check saved files
+        run: |
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          for img in sorted(glob.glob("entrega/*.png")):
+              a=Image.open(img);a.verify()
+              print("VERIFIED_RENDER", os.path.basename(img), os.path.getsize(img))
+          for blend in sorted(glob.glob("entrega/*.blend")):
+              assert os.path.getsize(blend)>10240  # .blend may use Blender internal compression
+              print("VERIFIED_BLEND", os.path.basename(blend), os.path.getsize(blend))
+          assert len(glob.glob("entrega/*.blend"))==4
+          assert len(glob.glob("entrega/*.png"))==4
+          PY
+      - name: Re-open every Blender project
+        shell: bash
+        run: |
+          for project in entrega/*.blend; do
+            blender -b "$project" --python-exit-code 1 --python-expr 'import bpy; assert len(bpy.data.objects)>0; print("REOPEN_OK", bpy.data.filepath, len(bpy.data.objects))'
+          done
+      - name: Print reduced preview image
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from io import BytesIO
+          import base64,glob
+          for file in sorted(glob.glob("entrega/*.png")):
+              im=Image.open(file).convert("RGB")
+              im.thumbnail((530,360))
+              bio=BytesIO()
+              im.save(bio, format="JPEG", quality=67)
+              print("PREVIEW_"+file.split("/")[-1]+"="+base64.b64encode(bio.getvalue()).decode())
+          PY
+      - name: Save finished projects in work branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A entrega/
+          git commit -m "feat: deliver four editable Blender texturing scenes and renders"
+          git push origin HEAD:trabajo-taller-texturing
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Taller-Blender-Texturing-Entrega
+          path: entrega/
+          retention-days: 30
