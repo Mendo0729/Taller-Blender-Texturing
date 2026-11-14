@@ -21,6 +21,9 @@ jobs:
         run: |
           blender -b -t 6 --python-exit-code 1 --python scripts/build_taller.py
           ls -lh entrega/
+      - name: Remove automatic Blender backup copies
+        shell: bash
+        run: rm -f entrega/*.blend1
       - name: Document the deliverables
         shell: bash
         run: |
@@ -101,7 +104,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add entrega/
+          git add -A entrega/
           git commit -m "feat: deliver four editable Blender texturing scenes and renders"
           git push origin HEAD:trabajo-taller-texturing
       - uses: actions/upload-artifact@v4
