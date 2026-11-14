@@ -129,7 +129,7 @@ def pbr_material(name, color_file, rough_file=None, normal_file=None, metal_file
     nt.links.new(mp.outputs["Vector"],albedo.inputs["Vector"])
     if tint:
         mix=nt.nodes.new("ShaderNodeMixRGB");mix.blend_type='MULTIPLY';mix.location=(-70,320)
-        mix.inputs[0].default_value=.38
+        mix.inputs[0].default_value=.78
         mix.inputs[2].default_value=(*tint,1)
         nt.links.new(albedo.outputs["Color"],mix.inputs[1])
         nt.links.new(mix.outputs["Color"],p.inputs["Base Color"])
@@ -270,7 +270,7 @@ def make_gallery():
     ground(-.06)
     cam=lights_and_camera(target=(0,0,1.1),cam_pos=(5,-12,8),ortho=12.7)
     for x,s in [(-3.8,"DIELÉCTRICO"),(-1.4,"METÁLICO"),(1.0,"FIBRA DE CARBONO"),(4.25,"DOS MATERIALES")]:
-        label(s,(x,-1.05,2.45),cam,.29)
+        pass  # Los nombres de los materiales se detallan en LEEME.md
     label("01 / MATERIALES Y PROPIEDADES",(0,1.5,3.60),cam,.44)
     save_and_render("01_materiales","Color base, metálico, rugosidad, clearcoat, material por cara")
 
@@ -296,7 +296,7 @@ def make_camo():
     ground(-.08)
     cam=lights_and_camera(target=(.0,0,1.0),cam_pos=(5,-11,8),ortho=11.4)
     for x,s in [(-2.4,"NOISE + COLOR RAMP"),(.2,"MEZCLA DE 3 COLORES"),(3,"TEXTURA DE IMAGEN")]:
-        label(s,(x,-1.25,2.48),cam,.27)
+        pass  # Evitar texto superpuesto sobre la geometria
     label("02 / NODOS Y CAMUFLAJE PROCEDURAL",(0,1.5,3.85),cam,.42)
     save_and_render("02_camuflaje","Noise, ColorRamp, MixRGB, imagen UV")
 
@@ -314,7 +314,7 @@ def make_uv():
     ground(-.03)
     cam=lights_and_camera(target=(0,0,1.0),cam_pos=(6,-11,8),ortho=11.5)
     for x, s in [(-3.2,"CUADRÍCULA UV"),(0,"PROYECCIÓN UV"),(3.2,"OBJECT + BOX")]:
-        label(s,(x,-1.0,2.46),cam,.30)
+        pass  # Evitar texto superpuesto sobre la geometria
     label("03 / COMPARACIÓN DE COORDENADAS",(0,1.3,3.75),cam,.42)
     save_and_render("03_mapeo_uv","UV, coordenadas de objeto y proyección BOX")
 
@@ -350,7 +350,7 @@ def make_tank():
     for poly in body.data.polygons:
         zz=(poly.center.z-zmin)/h
         xx=abs(poly.center.x-(xmax+xmin)/2)/width
-        if zz<.27 or (xx>.36 and zz<.55):
+        if zz<.16 or (xx>.43 and zz<.43):
             index=1
         elif zz>.76 and xx<.23:
             index=2
@@ -374,7 +374,7 @@ def make_tank():
     target=(0,0,(low+hi)/2)
     cam=lights_and_camera(target=target,cam_pos=(5.0,-8.7,5.2),ortho=7.0)
     # Luz extra para destacar volumen de las orugas y cilindros.
-    label("04 / TANQUE TEXTURIZADO CON MAPAS PBR",(0,1.0,hi+1.55),cam,.34)
+    pass  # La toma del tanque se presenta sin titulos 3D
     print("TANK_FACES",tally,"rangeZ",(zmin,zmax),"bbox",(low,hi))
     save_and_render("04_tanque_pbr","Tanque original con pinturas, rugosidad, normal, metallic")
 
